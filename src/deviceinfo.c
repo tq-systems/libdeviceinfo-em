@@ -21,7 +21,6 @@
 static json_t *product_info;
 static char *serial;
 
-static char *firmware_version;
 static char *hardware_revision;
 
 
@@ -123,60 +122,10 @@ static char * read_cpuinfo(const char *key) {
 	return ret;
 }
 
-static char * line_get_value(const char *line) {
-	char *start, *end;
-	char quote = 0;
-
-	start = strchr(line, '=');
-	if (!start)
-		return NULL;
-
-	/* point to position after '=' */
-	start++;
-
-	/* remember a possible quote char */
-	if (*start == '\'' || *start == '"')
-		quote = *start++;
-
-	/* this does not detect quoted quotes (...='...\'...') correctly */
-	end = start;
-	while (*end && *end != '\r' && *end != '\n' && *end != quote)
-		end++;
-
-	return strndup(start, end - start);
-}
-
-static char * read_osrelease(const char *key) {
-	FILE *f;
-	char *line = NULL;
-	size_t len = 0;
-	ssize_t c;
-	char *ret = NULL;
-
-	f = fopen("/etc/os-release", "r");
-	if (f == NULL)
-		return NULL;
-
-	while ((c = getline(&line, &len, f)) != -1) {
-		if (!line_starts_with(line, key))
-			continue;
-
-		ret = line_get_value(line);
-		if (ret)
-			break;
-	}
-
-	fclose(f);
-	free(line);
-
-	return ret;
-}
-
 
 __attribute__((constructor)) static void init(void) {
 	product_info = json_load_file(PRODUCT_INFO_FILE, 0, NULL);
 	serial = read_fwenv("serial");
-	firmware_version = read_osrelease("VERSION=");
 	hardware_revision = read_cpuinfo("Revision");
 }
 
@@ -186,9 +135,6 @@ __attribute__((destructor)) static void deinit(void) {
 
 	free(serial);
 	serial = NULL;
-
-	free(firmware_version);
-	firmware_version = NULL;
 
 	free(hardware_revision);
 	hardware_revision = NULL;
@@ -217,6 +163,7 @@ const char * deviceinfo_get_product_name(void) {
 
 uint16_t deviceinfo_get_firmware_version_id(void) {
 	uint8_t major = 0, minor = 0;
+	const char *firmware_version = deviceinfo_get_firmware_version_str();
 	if (firmware_version)
 		sscanf(firmware_version, "%02"SCNx8".%02"SCNx8, &major, &minor);
 
@@ -224,7 +171,7 @@ uint16_t deviceinfo_get_firmware_version_id(void) {
 }
 
 const char * deviceinfo_get_firmware_version_str(void) {
-	return firmware_version;
+	return json_string_value(json_object_get(product_info, "software_version"));
 }
 
 uint16_t deviceinfo_get_hardware_revision_id(void) {
