@@ -15,7 +15,7 @@ add_executable(test-deviceinfo
 target_link_libraries(test-deviceinfo deviceinfo)
 
 install(TARGETS deviceinfo
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib/${CMAKE_LIBRARY_ARCHITECTURE}
+  LIBRARY DESTINATION lib/${CMAKE_LIBRARY_ARCHITECTURE}
   RUNTIME DESTINATION bin
 )
