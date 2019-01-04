@@ -1,3 +1,5 @@
+include(GNUInstallDirs)
+
 set_property(DIRECTORY PROPERTY COMPILE_DEFINITIONS "_POSIX_C_SOURCE=200809L")
 include_directories(${LIBDEVICEINFO_SOURCE_DIR}/include ${JANSSON_INCLUDE_DIR})
 
@@ -15,7 +17,7 @@ add_executable(test-deviceinfo
 target_link_libraries(test-deviceinfo deviceinfo)
 
 install(TARGETS deviceinfo
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
