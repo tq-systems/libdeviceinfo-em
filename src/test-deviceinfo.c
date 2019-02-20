@@ -10,6 +10,7 @@
 int main() {
 	printf("Manufacturer ID: %04X\n", deviceinfo_get_manufacturer_id());
 	printf("Manufacturer name: %s\n", deviceinfo_get_manufacturer_name());
+	printf("Manufacturer URL: %s\n", deviceinfo_get_manufacturer_url());
 	printf("Product ID: %04X\n", deviceinfo_get_product_id());
 	printf("Product code: %s\n", deviceinfo_get_product_code());
 	printf("Product name: %s\n", deviceinfo_get_product_name());
