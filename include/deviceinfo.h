@@ -12,6 +12,7 @@
 /** Numerical manufacturer ID; always 0x5233 */
 uint16_t deviceinfo_get_manufacturer_id(void);
 const char * deviceinfo_get_manufacturer_name(void);
+const char * deviceinfo_get_manufacturer_url(void);
 
 /** Numerical product ID; 0x4842 for TQ Energy Manager devices */
 uint16_t deviceinfo_get_product_id(void);

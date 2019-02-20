@@ -149,6 +149,10 @@ const char * deviceinfo_get_manufacturer_name(void) {
 	return json_string_value(json_object_get(product_info, "manufacturer"));
 }
 
+const char * deviceinfo_get_manufacturer_url(void) {
+	return json_string_value(json_object_get(product_info, "manufacturer_url"));
+}
+
 uint16_t deviceinfo_get_product_id(void) {
 	return 0x4842;
 }
