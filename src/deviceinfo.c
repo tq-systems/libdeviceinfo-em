@@ -21,6 +21,7 @@
 static json_t *product_info;
 static char *serial;
 
+static uint16_t product_id;
 static char *hardware_revision;
 
 
@@ -35,6 +36,34 @@ static void trim_trail(char *str) {
 
 		*p = 0;
 	}
+}
+
+/**
+ * Reads a file and returns the first line of output
+ *
+ * Trailing whitespace is removed.
+ */
+static char * read_file(const char *filename) {
+	char *line = NULL;
+	size_t len = 0;
+	FILE *f;
+	ssize_t rv;
+
+	if ((f = fopen(filename, "r")) == NULL)
+		return NULL;
+
+	rv = getline(&line, &len, f);
+	fclose(f);
+
+	if (rv == -1) {
+		free(line);
+		return NULL;
+	}
+
+	/* trim away newline character(s) */
+	trim_trail(line);
+
+	return line;
 }
 
 /**
@@ -122,10 +151,27 @@ static char * read_cpuinfo(const char *key) {
 	return ret;
 }
 
+static uint16_t read_product_id(void) {
+	char *compatible = read_file("/sys/firmware/devicetree/base/compatible");
+	if (!compatible)
+		return 0;
+
+	uint16_t ret = 0;
+
+	if (strcmp(compatible, "tqs,energymanager300") == 0)
+		ret = 0x4842;
+	else if (strcmp(compatible, "tqs,energymanager310") == 0)
+		ret = 0x4852;
+
+	free(compatible);
+	return ret;
+}
+
 
 __attribute__((constructor)) static void init(void) {
 	product_info = json_load_file(PRODUCT_INFO_FILE, 0, NULL);
 	serial = read_fwenv("serial");
+	product_id = read_product_id();
 	hardware_revision = read_cpuinfo("Revision");
 }
 
@@ -154,7 +200,7 @@ const char * deviceinfo_get_manufacturer_url(void) {
 }
 
 uint16_t deviceinfo_get_product_id(void) {
-	return 0x4842;
+	return product_id;
 }
 
 const char * deviceinfo_get_product_code(void) {
