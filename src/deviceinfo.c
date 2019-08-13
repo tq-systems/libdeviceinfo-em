@@ -7,6 +7,7 @@
 
 #include <jansson.h>
 
+#include <arpa/inet.h>
 #include <ctype.h>
 #include <inttypes.h>
 #include <stdbool.h>
@@ -22,7 +23,8 @@ static json_t *product_info;
 static char *serial;
 
 static uint16_t product_id;
-static char *hardware_revision;
+static uint16_t hardware_revision;
+static char hardware_revision_str[5];
 
 
 /* Removes trailing whitespace */
@@ -111,46 +113,6 @@ static inline bool line_starts_with(const char *line, const char *prefix) {
 	return strncmp(line, prefix, strlen(prefix)) == 0;
 }
 
-static char * read_cpuinfo(const char *key) {
-	FILE *fp;
-	char *line = NULL;
-	size_t len = 0;
-	char *start;
-	ssize_t c;
-	char *ret = NULL;
-
-	fp = fopen("/proc/cpuinfo", "r");
-	if (fp == NULL)
-		return NULL;
-
-	while ((c = getline(&line, &len, fp)) != -1) {
-		/* skip lines not starting with $key */
-		if (!line_starts_with(line, key))
-			continue;
-
-		/* look for ':' */
-		start = strchr(line, ':');
-		if (!start)
-			continue;
-		start++;
-
-		/* trim leading whitespacec */
-		while (*start && (*start == ' ' || *start == '\t'))
-			start++;
-
-		trim_trail(start);
-		ret = strdup(start);
-
-		/* found so skip remaining file */
-		break;
-	}
-
-	fclose(fp);
-	free(line);
-
-	return ret;
-}
-
 static uint16_t read_product_id(void) {
 	char *compatible = read_file("/sys/firmware/devicetree/base/compatible");
 	if (!compatible)
@@ -167,12 +129,28 @@ static uint16_t read_product_id(void) {
 	return ret;
 }
 
+static uint16_t read_hardware_revision(void) {
+	FILE *f;
+	uint32_t rev = 0;
+
+	if ((f = fopen("/sys/firmware/devicetree/base/tqs,revision", "r")) == NULL)
+		return 0;
+
+	/* No further error handling necessary: rev will retain its value 0 if anything goes wrong */
+	fread(&rev, sizeof(rev), 1, f);
+	fclose(f);
+
+	/* Value is passed as 32bit big-endian by U-boot */
+	return ntohl(rev);
+}
 
 __attribute__((constructor)) static void init(void) {
 	product_info = json_load_file(PRODUCT_INFO_FILE, 0, NULL);
 	serial = read_fwenv("serial");
 	product_id = read_product_id();
-	hardware_revision = read_cpuinfo("Revision");
+	hardware_revision = read_hardware_revision();
+
+	snprintf(hardware_revision_str, sizeof(hardware_revision_str), "%04X", hardware_revision);
 }
 
 __attribute__((destructor)) static void deinit(void) {
@@ -181,9 +159,6 @@ __attribute__((destructor)) static void deinit(void) {
 
 	free(serial);
 	serial = NULL;
-
-	free(hardware_revision);
-	hardware_revision = NULL;
 }
 
 
@@ -225,15 +200,11 @@ const char * deviceinfo_get_firmware_version_str(void) {
 }
 
 uint16_t deviceinfo_get_hardware_revision_id(void) {
-	uint16_t rev = 0;
-	if (hardware_revision)
-		sscanf(hardware_revision, "%04"SCNx16, &rev);
-
-	return rev;
+	return hardware_revision;
 }
 
 const char * deviceinfo_get_hardware_revision_str(void) {
-	return hardware_revision;
+	return hardware_revision_str;
 }
 
 const char * deviceinfo_get_serial_str(void) {
