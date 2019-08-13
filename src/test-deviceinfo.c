@@ -15,7 +15,7 @@ int main() {
 	printf("Product code: %s\n", deviceinfo_get_product_code());
 	printf("Product name: %s\n", deviceinfo_get_product_name());
 	printf("Firmware version ID: %04X\n", deviceinfo_get_firmware_version_id());
-	printf("Firmawre version string: %s\n", deviceinfo_get_firmware_version_str());
+	printf("Firmware version string: %s\n", deviceinfo_get_firmware_version_str());
 	printf("Hardware revision ID: %04X\n", deviceinfo_get_hardware_revision_id());
 	printf("Hardware revision string: %s\n", deviceinfo_get_hardware_revision_str());
 	printf("Serial string: %s\n", deviceinfo_get_serial_str());
