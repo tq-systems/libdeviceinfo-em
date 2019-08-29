@@ -7,6 +7,7 @@
 
 #include <jansson.h>
 
+#include <arpa/inet.h>
 #include <ctype.h>
 #include <inttypes.h>
 #include <stdbool.h>
@@ -21,7 +22,9 @@
 static json_t *product_info;
 static char *serial;
 
-static char *hardware_revision;
+static uint16_t product_id;
+static uint16_t hardware_revision;
+static char hardware_revision_str[5];
 
 
 /* Removes trailing whitespace */
@@ -35,6 +38,34 @@ static void trim_trail(char *str) {
 
 		*p = 0;
 	}
+}
+
+/**
+ * Reads a file and returns the first line of output
+ *
+ * Trailing whitespace is removed.
+ */
+static char * read_file(const char *filename) {
+	char *line = NULL;
+	size_t len = 0;
+	FILE *f;
+	ssize_t rv;
+
+	if ((f = fopen(filename, "r")) == NULL)
+		return NULL;
+
+	rv = getline(&line, &len, f);
+	fclose(f);
+
+	if (rv == -1) {
+		free(line);
+		return NULL;
+	}
+
+	/* trim away newline character(s) */
+	trim_trail(line);
+
+	return line;
 }
 
 /**
@@ -82,51 +113,44 @@ static inline bool line_starts_with(const char *line, const char *prefix) {
 	return strncmp(line, prefix, strlen(prefix)) == 0;
 }
 
-static char * read_cpuinfo(const char *key) {
-	FILE *fp;
-	char *line = NULL;
-	size_t len = 0;
-	char *start;
-	ssize_t c;
-	char *ret = NULL;
+static uint16_t read_product_id(void) {
+	char *compatible = read_file("/sys/firmware/devicetree/base/compatible");
+	if (!compatible)
+		return 0;
 
-	fp = fopen("/proc/cpuinfo", "r");
-	if (fp == NULL)
-		return NULL;
+	uint16_t ret = 0;
 
-	while ((c = getline(&line, &len, fp)) != -1) {
-		/* skip lines not starting with $key */
-		if (!line_starts_with(line, key))
-			continue;
+	if (strcmp(compatible, "tqs,energymanager300") == 0)
+		ret = 0x4842;
+	else if (strcmp(compatible, "tqs,energymanager310") == 0)
+		ret = 0x4852;
 
-		/* look for ':' */
-		start = strchr(line, ':');
-		if (!start)
-			continue;
-		start++;
-
-		/* trim leading whitespacec */
-		while (*start && (*start == ' ' || *start == '\t'))
-			start++;
-
-		trim_trail(start);
-		ret = strdup(start);
-
-		/* found so skip remaining file */
-		break;
-	}
-
-	fclose(fp);
-	free(line);
-
+	free(compatible);
 	return ret;
 }
 
+static uint16_t read_hardware_revision(void) {
+	FILE *f;
+	uint32_t rev = 0;
+
+	if ((f = fopen("/sys/firmware/devicetree/base/tqs,revision", "r")) == NULL)
+		return 0;
+
+	/* No further error handling necessary: rev will retain its value 0 if anything goes wrong */
+	fread(&rev, sizeof(rev), 1, f);
+	fclose(f);
+
+	/* Value is passed as 32bit big-endian by U-boot */
+	return ntohl(rev);
+}
 
 __attribute__((constructor)) static void init(void) {
 	product_info = json_load_file(PRODUCT_INFO_FILE, 0, NULL);
 	serial = read_fwenv("serial");
-	hardware_revision = read_cpuinfo("Revision");
+	product_id = read_product_id();
+	hardware_revision = read_hardware_revision();
+
+	snprintf(hardware_revision_str, sizeof(hardware_revision_str), "%04X", hardware_revision);
 }
 
 __attribute__((destructor)) static void deinit(void) {
@@ -135,9 +159,6 @@ __attribute__((destructor)) static void deinit(void) {
 
 	free(serial);
 	serial = NULL;
-
-	free(hardware_revision);
-	hardware_revision = NULL;
 }
 
 
@@ -154,7 +175,7 @@ const char * deviceinfo_get_manufacturer_url(void) {
 }
 
 uint16_t deviceinfo_get_product_id(void) {
-	return 0x4842;
+	return product_id;
 }
 
 const char * deviceinfo_get_product_code(void) {
@@ -179,15 +200,11 @@ const char * deviceinfo_get_firmware_version_str(void) {
 }
 
 uint16_t deviceinfo_get_hardware_revision_id(void) {
-	uint16_t rev = 0;
-	if (hardware_revision)
-		sscanf(hardware_revision, "%04"SCNx16, &rev);
-
-	return rev;
+	return hardware_revision;
 }
 
 const char * deviceinfo_get_hardware_revision_str(void) {
-	return hardware_revision;
+	return hardware_revision_str;
 }
 
 const char * deviceinfo_get_serial_str(void) {
