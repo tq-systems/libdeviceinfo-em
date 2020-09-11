@@ -126,6 +126,8 @@ static uint16_t read_product_id(void) {
 	else if (strcmp(compatible, "tq,em310") == 0 ||
 		 strcmp(compatible, "tqs,energymanager310") == 0)
 		ret = 0x4852;
+	else if (strcmp(compatible, "tq,em4xx") == 0)
+		ret = 0x4862;
 
 	free(compatible);
 	return ret;
