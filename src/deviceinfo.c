@@ -120,10 +120,14 @@ static uint16_t read_product_id(void) {
 
 	uint16_t ret = 0;
 
-	if (strcmp(compatible, "tqs,energymanager300") == 0)
+	if (strcmp(compatible, "tq,em300") == 0 ||
+	    strcmp(compatible, "tqs,energymanager300") == 0)
 		ret = 0x4842;
-	else if (strcmp(compatible, "tqs,energymanager310") == 0)
+	else if (strcmp(compatible, "tq,em310") == 0 ||
+		 strcmp(compatible, "tqs,energymanager310") == 0)
 		ret = 0x4852;
+	else if (strcmp(compatible, "tq,em4xx") == 0)
+		ret = 0x4862;
 
 	free(compatible);
 	return ret;
@@ -133,7 +137,10 @@ static uint16_t read_hardware_revision(void) {
 	FILE *f;
 	uint32_t rev = 0;
 
-	if ((f = fopen("/sys/firmware/devicetree/base/tqs,revision", "r")) == NULL)
+	f = fopen("/sys/firmware/devicetree/base/tq,revision", "r");
+	if (!f)
+		f = fopen("/sys/firmware/devicetree/base/tqs,revision", "r");
+	if (!f)
 		return 0;
 
 	/* No further error handling necessary: rev will retain its value 0 if anything goes wrong */
