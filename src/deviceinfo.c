@@ -135,7 +135,7 @@ static uint16_t read_product_id(void) {
 
 static uint16_t read_hardware_revision(void) {
 	FILE *f;
-	uint32_t rev = 0;
+	uint32_t rev;
 
 	f = fopen("/sys/firmware/devicetree/base/tq,revision", "r");
 	if (!f)
@@ -143,8 +143,9 @@ static uint16_t read_hardware_revision(void) {
 	if (!f)
 		return 0;
 
-	/* No further error handling necessary: rev will retain its value 0 if anything goes wrong */
-	fread(&rev, sizeof(rev), 1, f);
+	if (fread(&rev, sizeof(rev), 1, f) != 1)
+		rev = 0;
+
 	fclose(f);
 
 	/* Value is passed as 32bit big-endian by U-boot */
