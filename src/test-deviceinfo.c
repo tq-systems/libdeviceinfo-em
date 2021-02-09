@@ -14,6 +14,7 @@ int main() {
 	printf("Product ID: %04X\n", deviceinfo_get_product_id());
 	printf("Product code: %s\n", deviceinfo_get_product_code());
 	printf("Product name: %s\n", deviceinfo_get_product_name());
+	printf("Device type string: %s\n", deviceinfo_get_device_type_str());
 	printf("Firmware version ID: %04X\n", deviceinfo_get_firmware_version_id());
 	printf("Firmware version string: %s\n", deviceinfo_get_firmware_version_str());
 	printf("Hardware revision ID: %04X\n", deviceinfo_get_hardware_revision_id());
