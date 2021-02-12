@@ -194,6 +194,10 @@ const char * deviceinfo_get_product_name(void) {
 	return json_string_value(json_object_get(product_info, "name"));
 }
 
+const char * deviceinfo_get_device_type_str(void) {
+	return json_string_value(json_object_get(product_info, "devicetype"));
+}
+
 uint16_t deviceinfo_get_firmware_version_id(void) {
 	uint8_t major = 0, minor = 0;
 	const char *firmware_version = deviceinfo_get_firmware_version_str();
