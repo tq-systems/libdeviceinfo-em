@@ -26,6 +26,9 @@ const char * deviceinfo_get_product_name(void);
 /** Device type like "hw0100", which is mapped directly via machine like "em310" */
 const char * deviceinfo_get_device_type_str(void);
 
+/**  Creation year like "2022" */
+const char * deviceinfo_get_creation_year(void);
+
 /**
  * Returns the firmware major and minor version as a uint16_t
  * 
