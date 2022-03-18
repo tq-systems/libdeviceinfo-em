@@ -222,3 +222,7 @@ const char * deviceinfo_get_hardware_revision_str(void) {
 const char * deviceinfo_get_serial_str(void) {
 	return serial;
 }
+
+const char * deviceinfo_get_creation_year(void) {
+	return json_string_value(json_object_get(product_info, "creation_year"));
+}
