@@ -102,8 +102,11 @@ static char * read_cmd(const char *cmd) {
  */
 static char * read_fwenv(const char *key) {
 	char cmdstr[64];
+	int cmdstr_len = -1;
 
-	if (snprintf(cmdstr, sizeof(cmdstr), "fw_printenv -n '%s' 2>/dev/null", key) >= (int)sizeof(cmdstr))
+	/* Catch encoding errors or insufficient buffer size */
+	cmdstr_len = snprintf(cmdstr, sizeof(cmdstr), "sudo -n fw_printenv -n '%s' 2>/dev/null", key);
+	if (cmdstr_len < 0 || cmdstr_len >= (int)sizeof(cmdstr))
 		return NULL;
 
 	return read_cmd(cmdstr);
