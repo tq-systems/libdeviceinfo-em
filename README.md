@@ -20,8 +20,8 @@ The following files will be read and thus must be added to `ReadOnlyPaths` if
 /sys/firmware/devicetree/base/tqs,revision
 ```
 
-This provides the information for the most public functions of this library,
-namely for:
+They provide information for the most public functions of this library, namely
+for:
 
 ```C
 uint16_t deviceinfo_get_manufacturer_id(void)
@@ -40,14 +40,28 @@ const char * deviceinfo_get_creation_year(void)
 
 ### `devicedeviceinfo_get_serial_str()`
 
-For this function to work properly, additional configuration is required for
-sandboxed apps.
+For this function to work properly in sandboxed apps, additional configuration
+is required:
 
-Add `em-group-sudo-fw_printenv` to `SupplementaryGroups` to allow using `sudo`
-to run the external `fw_printenv` binary. If `ExecPaths` are used, add
-`/usr/bin/fw_printenv` to it.
+- append `em-group-sudo-fw_printenv` to `SupplementaryGroups=`
+    - this allows the service to use `sudo` to run the external `fw_printenv`
+      binary
+- append `/usr/bin/fw_printenv` to `ExecPaths=`
+    - required if `NoExecPaths=/` or similar is in use
+- add `DeviceAllow=/dev/mmcblk0`
+    - required when using `DevicePolicy=closed` or similar
+    - allows `fw_printenv` to access the mmc block device to extract the
+      required information from the U-boot environment
+- add `DeviceAllow=/dev/null`
+    - required when using `DevicePolicy=strict`
+    - alternatively, use `DevicePolicy=closed`, which automatically grants
+      access to selected devices like `/dev/null`
 
-`/dev/null` is used, so you cannot set `PrivateDevices` to `true`. Use
-`DevicePolicy=closed` instead and add `DeviceAllow=/dev/mmcblk0` to allow
-`fw_printenv` to access the mmc block device to extract the required information
-from the U-boot environment.
+The following sandboxing features *cannot* be used:
+- `SecureBits`: remove `noroot` and `noroot-locked` options
+    - `sudo` needs to spawn a process with root permissions
+- `NoNewPrivileges=true`: set to `false` or remove entirely
+- `PrivateDevices=true`: set to `false` or remove entirely
+    - access to `/dev/null` is required
+- `ProtectKernelTunables=true`: set to `false` or remove entirely
+- `ProtectKernelModules=true`: set to `false` or remove entirely
