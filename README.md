@@ -46,7 +46,7 @@ is required:
 - append `em-group-sudo-fw_printenv` to `SupplementaryGroups=`
     - this allows the service to use `sudo` to run the external `fw_printenv`
       binary
-- append `/usr/bin/fw_printenv` to `ExecPaths=`
+- append `/usr/bin/fw_printenv /usr/bin/sudo` to `ExecPaths=`
     - required if `NoExecPaths=/` or similar is in use
 - add `DeviceAllow=/dev/mmcblk0`
     - required when using `DevicePolicy=closed` or similar
@@ -63,5 +63,5 @@ The following sandboxing features *cannot* be used:
 - `NoNewPrivileges=true`: set to `false` or remove entirely
 - `PrivateDevices=true`: set to `false` or remove entirely
     - access to `/dev/null` is required
-- `ProtectKernelTunables=true`: set to `false` or remove entirely
-- `ProtectKernelModules=true`: set to `false` or remove entirely
+- `ProtectKernelTunables=true`: set to `false` or remove entirely (if user is not `root`)
+- `ProtectKernelModules=true`: set to `false` or remove entirely (if user is not `root`)
