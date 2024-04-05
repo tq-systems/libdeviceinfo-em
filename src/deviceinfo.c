@@ -117,7 +117,7 @@ static inline bool line_starts_with(const char *line, const char *prefix) {
 }
 
 static uint16_t read_product_id(void) {
-	char *compatible = read_file("/sys/firmware/devicetree/base/compatible");
+	char *compatible = read_file("/proc/device-tree/compatible");
 	if (!compatible)
 		return 0;
 
@@ -140,9 +140,9 @@ static uint16_t read_hardware_revision(void) {
 	FILE *f;
 	uint32_t rev;
 
-	f = fopen("/sys/firmware/devicetree/base/tq,revision", "r");
+	f = fopen("/proc/device-tree/tq,revision", "r");
 	if (!f)
-		f = fopen("/sys/firmware/devicetree/base/tqs,revision", "r");
+		f = fopen("/proc/device-tree/tqs,revision", "r");
 	if (!f)
 		return 0;
 
