@@ -188,7 +188,13 @@ __attribute__((destructor)) static void deinit(void) {
 
 
 uint16_t deviceinfo_get_manufacturer_id(void) {
-	return 0x5233;
+	uint16_t ret;
+
+	ret = json_integer_value(json_object_get(product_info, "manufacturer_id"));
+	if (!ret)
+		ret = 0x5233;
+
+	return ret;
 }
 
 const char * deviceinfo_get_manufacturer_name(void) {
