@@ -128,19 +128,25 @@ static char * read_serial(void) {
 }
 
 static uint16_t read_product_id(void) {
+	json_t *product_id_info;
+	uint16_t ret = 0;
+
 	if (!device_compatible)
 		return 0;
 
-	uint16_t ret = 0;
+	product_id_info = json_object_get(product_info, "product_id");
+	ret = json_integer_value(json_object_get(product_id_info, device_compatible));
 
-	if (strcmp(device_compatible, "tq,em300") == 0 ||
-	    strcmp(device_compatible, "tqs,energymanager300") == 0)
-		ret = 0x4842;
-	else if (strcmp(device_compatible, "tq,em310") == 0 ||
-		 strcmp(device_compatible, "tqs,energymanager310") == 0)
-		ret = 0x4852;
-	else if (strcmp(device_compatible, "tq,em4xx") == 0)
-		ret = 0x4862;
+	if (!ret) {
+		if (strcmp(device_compatible, "tq,em300") == 0 ||
+		    strcmp(device_compatible, "tqs,energymanager300") == 0)
+			ret = 0x4842;
+		else if (strcmp(device_compatible, "tq,em310") == 0 ||
+			 strcmp(device_compatible, "tqs,energymanager310") == 0)
+			ret = 0x4852;
+		else if (strcmp(device_compatible, "tq,em4xx") == 0)
+			ret = 0x4862;
+	}
 
 	return ret;
 }
