@@ -22,6 +22,8 @@
 static char *device_compatible;
 static json_t *product_info;
 static char *serial;
+/* Allocated and freed with product_info */
+static const char *devicetype;
 
 static uint16_t product_id;
 static uint16_t hardware_revision;
@@ -170,6 +172,20 @@ static uint16_t read_hardware_revision(void) {
 	return ntohl(rev);
 }
 
+static const char * read_devicetype(void) {
+	const char *ret = NULL;
+
+	if (device_compatible) {
+		json_t *devicesubtype = json_object_get(product_info, "devicesubtype");
+		ret = json_string_value(json_object_get(devicesubtype, device_compatible));
+	}
+
+	if (!ret)
+		ret = json_string_value(json_object_get(product_info, "devicetype"));
+
+	return ret;
+}
+
 __attribute__((constructor)) static void init(void) {
 	device_compatible = read_file("/proc/device-tree/compatible");
 
@@ -177,12 +193,14 @@ __attribute__((constructor)) static void init(void) {
 	serial = read_serial();
 	product_id = read_product_id();
 	hardware_revision = read_hardware_revision();
+	devicetype = read_devicetype();
 
 	snprintf(hardware_revision_str, sizeof(hardware_revision_str), "%04X", hardware_revision);
 }
 
 __attribute__((destructor)) static void deinit(void) {
 	json_decref(product_info);
+	devicetype = NULL;
 	product_info = NULL;
 
 	free(serial);
@@ -224,7 +242,7 @@ const char * deviceinfo_get_product_name(void) {
 }
 
 const char * deviceinfo_get_device_type_str(void) {
-	return json_string_value(json_object_get(product_info, "devicetype"));
+	return devicetype;
 }
 
 uint16_t deviceinfo_get_firmware_version_id(void) {
