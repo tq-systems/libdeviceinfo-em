@@ -19,6 +19,7 @@
 #define PRODUCT_INFO_FILE "/etc/product-info.json"
 
 
+static char *device_compatible;
 static json_t *product_info;
 static char *serial;
 
@@ -117,22 +118,20 @@ static inline bool line_starts_with(const char *line, const char *prefix) {
 }
 
 static uint16_t read_product_id(void) {
-	char *compatible = read_file("/proc/device-tree/compatible");
-	if (!compatible)
+	if (!device_compatible)
 		return 0;
 
 	uint16_t ret = 0;
 
-	if (strcmp(compatible, "tq,em300") == 0 ||
-	    strcmp(compatible, "tqs,energymanager300") == 0)
+	if (strcmp(device_compatible, "tq,em300") == 0 ||
+	    strcmp(device_compatible, "tqs,energymanager300") == 0)
 		ret = 0x4842;
-	else if (strcmp(compatible, "tq,em310") == 0 ||
-		 strcmp(compatible, "tqs,energymanager310") == 0)
+	else if (strcmp(device_compatible, "tq,em310") == 0 ||
+		 strcmp(device_compatible, "tqs,energymanager310") == 0)
 		ret = 0x4852;
-	else if (strcmp(compatible, "tq,em4xx") == 0)
+	else if (strcmp(device_compatible, "tq,em4xx") == 0)
 		ret = 0x4862;
 
-	free(compatible);
 	return ret;
 }
 
@@ -156,6 +155,8 @@ static uint16_t read_hardware_revision(void) {
 }
 
 __attribute__((constructor)) static void init(void) {
+	device_compatible = read_file("/proc/device-tree/compatible");
+
 	product_info = json_load_file(PRODUCT_INFO_FILE, 0, NULL);
 	serial = read_fwenv("serial");
 	product_id = read_product_id();
@@ -170,6 +171,9 @@ __attribute__((destructor)) static void deinit(void) {
 
 	free(serial);
 	serial = NULL;
+
+	free(device_compatible);
+	device_compatible = NULL;
 }
 
 
