@@ -117,6 +117,16 @@ static inline bool line_starts_with(const char *line, const char *prefix) {
 	return strncmp(line, prefix, strlen(prefix)) == 0;
 }
 
+static char * read_serial(void) {
+	char *value;
+
+	value = read_file("/proc/device-tree/serial-number");
+	if (!value)
+		read_fwenv("serial");
+
+	return value;
+}
+
 static uint16_t read_product_id(void) {
 	if (!device_compatible)
 		return 0;
@@ -158,7 +168,7 @@ __attribute__((constructor)) static void init(void) {
 	device_compatible = read_file("/proc/device-tree/compatible");
 
 	product_info = json_load_file(PRODUCT_INFO_FILE, 0, NULL);
-	serial = read_fwenv("serial");
+	serial = read_serial();
 	product_id = read_product_id();
 	hardware_revision = read_hardware_revision();
 
