@@ -19,8 +19,11 @@
 #define PRODUCT_INFO_FILE "/etc/product-info.json"
 
 
+static char *device_compatible;
 static json_t *product_info;
 static char *serial;
+/* Allocated and freed with product_info */
+static const char *devicetype;
 
 static uint16_t product_id;
 static uint16_t hardware_revision;
@@ -116,23 +119,37 @@ static inline bool line_starts_with(const char *line, const char *prefix) {
 	return strncmp(line, prefix, strlen(prefix)) == 0;
 }
 
-static uint16_t read_product_id(void) {
-	char *compatible = read_file("/sys/firmware/devicetree/base/compatible");
-	if (!compatible)
-		return 0;
+static char * read_serial(void) {
+	char *value;
 
+	value = read_file("/proc/device-tree/serial-number");
+	if (!value)
+		read_fwenv("serial");
+
+	return value;
+}
+
+static uint16_t read_product_id(void) {
+	json_t *product_id_info;
 	uint16_t ret = 0;
 
-	if (strcmp(compatible, "tq,em300") == 0 ||
-	    strcmp(compatible, "tqs,energymanager300") == 0)
-		ret = 0x4842;
-	else if (strcmp(compatible, "tq,em310") == 0 ||
-		 strcmp(compatible, "tqs,energymanager310") == 0)
-		ret = 0x4852;
-	else if (strcmp(compatible, "tq,em4xx") == 0)
-		ret = 0x4862;
+	if (!device_compatible)
+		return 0;
 
-	free(compatible);
+	product_id_info = json_object_get(product_info, "product_id");
+	ret = json_integer_value(json_object_get(product_id_info, device_compatible));
+
+	if (!ret) {
+		if (strcmp(device_compatible, "tq,em300") == 0 ||
+		    strcmp(device_compatible, "tqs,energymanager300") == 0)
+			ret = 0x4842;
+		else if (strcmp(device_compatible, "tq,em310") == 0 ||
+			 strcmp(device_compatible, "tqs,energymanager310") == 0)
+			ret = 0x4852;
+		else if (strcmp(device_compatible, "tq,em4xx") == 0)
+			ret = 0x4862;
+	}
+
 	return ret;
 }
 
@@ -140,9 +157,9 @@ static uint16_t read_hardware_revision(void) {
 	FILE *f;
 	uint32_t rev;
 
-	f = fopen("/sys/firmware/devicetree/base/tq,revision", "r");
+	f = fopen("/proc/device-tree/tq,revision", "r");
 	if (!f)
-		f = fopen("/sys/firmware/devicetree/base/tqs,revision", "r");
+		f = fopen("/proc/device-tree/tqs,revision", "r");
 	if (!f)
 		return 0;
 
@@ -155,26 +172,53 @@ static uint16_t read_hardware_revision(void) {
 	return ntohl(rev);
 }
 
+static const char * read_devicetype(void) {
+	const char *ret = NULL;
+
+	if (device_compatible) {
+		json_t *devicesubtype = json_object_get(product_info, "devicesubtype");
+		ret = json_string_value(json_object_get(devicesubtype, device_compatible));
+	}
+
+	if (!ret)
+		ret = json_string_value(json_object_get(product_info, "devicetype"));
+
+	return ret;
+}
+
 __attribute__((constructor)) static void init(void) {
+	device_compatible = read_file("/proc/device-tree/compatible");
+
 	product_info = json_load_file(PRODUCT_INFO_FILE, 0, NULL);
-	serial = read_fwenv("serial");
+	serial = read_serial();
 	product_id = read_product_id();
 	hardware_revision = read_hardware_revision();
+	devicetype = read_devicetype();
 
 	snprintf(hardware_revision_str, sizeof(hardware_revision_str), "%04X", hardware_revision);
 }
 
 __attribute__((destructor)) static void deinit(void) {
 	json_decref(product_info);
+	devicetype = NULL;
 	product_info = NULL;
 
 	free(serial);
 	serial = NULL;
+
+	free(device_compatible);
+	device_compatible = NULL;
 }
 
 
 uint16_t deviceinfo_get_manufacturer_id(void) {
-	return 0x5233;
+	uint16_t ret;
+
+	ret = json_integer_value(json_object_get(product_info, "manufacturer_id"));
+	if (!ret)
+		ret = 0x5233;
+
+	return ret;
 }
 
 const char * deviceinfo_get_manufacturer_name(void) {
@@ -198,7 +242,7 @@ const char * deviceinfo_get_product_name(void) {
 }
 
 const char * deviceinfo_get_device_type_str(void) {
-	return json_string_value(json_object_get(product_info, "devicetype"));
+	return devicetype;
 }
 
 uint16_t deviceinfo_get_firmware_version_id(void) {
