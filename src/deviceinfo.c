@@ -122,7 +122,7 @@ static inline bool line_starts_with(const char *line, const char *prefix) {
 static char * read_serial(void) {
 	char *value;
 
-	value = read_file("/proc/device-tree/serial-number");
+	value = read_file("/proc/device-tree/tq,serial-number");
 	if (!value)
 		read_fwenv("serial");
 
