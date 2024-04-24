@@ -124,7 +124,7 @@ static char * read_serial(void) {
 
 	value = read_file("/proc/device-tree/tq,serial-number");
 	if (!value)
-		read_fwenv("serial");
+		value = read_fwenv("serial");
 
 	return value;
 }
