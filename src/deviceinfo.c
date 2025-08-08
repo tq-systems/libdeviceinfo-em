@@ -1,5 +1,10 @@
 /*
- * Copyright © 2014, 2018 TQ-Systems GmbH <info@tq-group.com>
+ * SPDX-License-Identifier: LicenseRef-TQSPSLA-1.0.3
+ *
+ * More license information can be found in the root folder.
+ * This file is part of libdeviceinfo.
+ *
+ * Copyright (c) 2014-2025 TQ-Systems GmbH <license@tq-group.com>, D-82229 Seefeld, Germany. All rights reserved.
  * Author: Michael Heimpold, Matthias Schiffer
  */
 
