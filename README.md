@@ -1,7 +1,11 @@
 # Libdeviceinfo
 
-A library providing common functions to query properties of an Energy Manager
-device.
+A library providing common functions to query properties of an Energy Manager device.
+
+# License information
+This library is licensed under the TQSPSLA-1.0.3, see LICENSE file for further details.
+All files in this <project/package> are classified as product-specific software and bound
+to the use with the TQ-Systems GmbH product: EM400
 
 ## Usage in sandboxed apps
 
