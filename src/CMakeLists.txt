@@ -16,8 +16,18 @@ add_executable(test-deviceinfo
 )
 target_link_libraries(test-deviceinfo deviceinfo)
 
+
+add_executable(em-devinfo
+	em-devinfo.c
+)
+target_link_libraries(em-devinfo deviceinfo)
+
 install(TARGETS deviceinfo
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(TARGETS em-devinfo
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
