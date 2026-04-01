@@ -19,6 +19,7 @@ The following files will be read and thus must be added to `ReadOnlyPaths` if
 
 ```
 /etc/product-info.json
+/etc/rauc/system.conf
 /sys/firmware/devicetree/base/compatible
 /sys/firmware/devicetree/base/tq,revision
 /sys/firmware/devicetree/base/tqs,revision
@@ -40,9 +41,10 @@ const char * deviceinfo_get_firmware_version_str(void)
 uint16_t deviceinfo_get_hardware_revision_id(void)
 const char * deviceinfo_get_hardware_revision_str(void)
 const char * deviceinfo_get_creation_year(void)
+const char * deviceinfo_get_rauc_compatible_str(void)
 ```
 
-### `devicedeviceinfo_get_serial_str()`
+### `deviceinfo_get_serial_str()` and `deviceinfo_get_hwtype_str()`
 
 For this function to work properly in sandboxed apps, additional configuration
 is required:

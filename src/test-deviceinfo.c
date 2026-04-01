@@ -25,6 +25,8 @@ int main() {
 	printf("Hardware revision ID: %04X\n", deviceinfo_get_hardware_revision_id());
 	printf("Hardware revision string: %s\n", deviceinfo_get_hardware_revision_str());
 	printf("Serial string: %s\n", deviceinfo_get_serial_str());
+	printf("Hardware type: %s\n", deviceinfo_get_hwtype_str());
+	printf("RAUC compatible: %s\n", deviceinfo_get_rauc_compatible_str());
 	printf("Creation year: %s\n", deviceinfo_get_creation_year());
 
 	return 0;

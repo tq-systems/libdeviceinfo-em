@@ -1,1 +1,3 @@
 ## [{{ version }}]
+### Added
+- Queries for hwtype and RAUC compatible strings

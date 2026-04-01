@@ -27,6 +27,8 @@
 static char *device_compatible;
 static json_t *product_info;
 static char *serial;
+static char *hwtype;
+static char *rauc_compatible;
 /* Allocated and freed with product_info */
 static const char *devicetype;
 
@@ -134,6 +136,56 @@ static char * read_serial(void) {
 	return value;
 }
 
+static char * read_hwtype(void) {
+	char *value;
+
+	value = read_fwenv("hwtype");
+	return value;
+}
+
+static char * read_rauc_compatible(void) {
+	/* Search for compatible= in [system] section */
+	const char *SYSTEM_SECTION_HEADER = "[system]";
+	const char *COMPATIBLE_PREFIX = "compatible=";
+
+	FILE *f;
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t rv;
+	bool in_system_section = false;
+	char *result = NULL;
+
+	f = fopen("/etc/rauc/system.conf", "r");
+	if (!f)
+		return NULL;
+
+	while ((rv = getline(&line, &len, f)) != -1) {
+		trim_trail(line);
+
+		/* Check for [system] section */
+		if (line_starts_with(line, SYSTEM_SECTION_HEADER)) {
+			in_system_section = true;
+			continue;
+		}
+
+		/* New section starts - we're out of [system] */
+		if (line_starts_with(line, "[")) {
+			in_system_section = false;
+			continue;
+		}
+
+		/* Found compatible= in [system] section */
+		if (in_system_section && line_starts_with(line, COMPATIBLE_PREFIX)) {
+			result = strdup(line + strlen(COMPATIBLE_PREFIX));
+			break;
+		}
+	}
+
+	free(line);
+	fclose(f);
+	return result;
+}
+
 static uint16_t read_product_id(void) {
 	json_t *product_id_info;
 	uint16_t ret = 0;
@@ -196,6 +248,8 @@ __attribute__((constructor)) static void init(void) {
 
 	product_info = json_load_file(PRODUCT_INFO_FILE, 0, NULL);
 	serial = read_serial();
+	hwtype = read_hwtype();
+	rauc_compatible = read_rauc_compatible();
 	product_id = read_product_id();
 	hardware_revision = read_hardware_revision();
 	devicetype = read_devicetype();
@@ -210,6 +264,12 @@ __attribute__((destructor)) static void deinit(void) {
 
 	free(serial);
 	serial = NULL;
+
+	free(hwtype);
+	hwtype = NULL;
+
+	free(rauc_compatible);
+	rauc_compatible = NULL;
 
 	free(device_compatible);
 	device_compatible = NULL;
@@ -273,6 +333,14 @@ const char * deviceinfo_get_hardware_revision_str(void) {
 
 const char * deviceinfo_get_serial_str(void) {
 	return serial;
+}
+
+const char * deviceinfo_get_hwtype_str(void) {
+	return hwtype;
+}
+
+const char * deviceinfo_get_rauc_compatible_str(void) {
+	return rauc_compatible;
 }
 
 const char * deviceinfo_get_creation_year(void) {
