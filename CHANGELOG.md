@@ -1,3 +1,7 @@
+## [1.9.0] - 2026-04-28
+### Added
+- Queries for hwtype and RAUC compatible strings
+
 ## [1.8.0] - 2025-09-17
 ### Added
 - initial em-devinfo tool
