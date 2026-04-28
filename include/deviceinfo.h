@@ -36,7 +36,7 @@ const char * deviceinfo_get_creation_year(void);
 
 /**
  * Returns the firmware major and minor version as a uint16_t
- * 
+ *
  * The two bytes of the uint16_t contain the major and minor version of the
  * firmware. Sub-minor/patchlevel components of the version string are omitted.
  * 0x0000 is returned if the version number does not follow the common scheme;
@@ -49,5 +49,7 @@ uint16_t deviceinfo_get_hardware_revision_id(void);
 const char * deviceinfo_get_hardware_revision_str(void);
 
 const char * deviceinfo_get_serial_str(void);
+const char * deviceinfo_get_hwtype_str(void);
+const char * deviceinfo_get_rauc_compatible_str(void);
 
 #endif /* _LIBDEVICEINFO_DEVICEINFO_H_ */

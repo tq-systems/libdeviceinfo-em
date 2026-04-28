@@ -28,6 +28,8 @@ static void print_help() {
 	printf("  --hardware-revision-id    Print hardware revision ID\n");
 	printf("  --hardware-revision       Print hardware revision string\n");
 	printf("  --serial                  Print serial string\n");
+	printf("  --hwtype                  Print hardware type string\n");
+	printf("  --rauc-compatible         Print RAUC compatible string\n");
 	printf("  --creation-year           Print creation year\n");
 	printf("  -h, --help                Show this help message\n");
 }
@@ -45,6 +47,8 @@ static void dump_info() {
 	printf("Hardware revision ID: %04X\n", deviceinfo_get_hardware_revision_id());
 	printf("Hardware revision string: %s\n", deviceinfo_get_hardware_revision_str());
 	printf("Serial string: %s\n", deviceinfo_get_serial_str());
+	printf("Hardware type: %s\n", deviceinfo_get_hwtype_str());
+	printf("RAUC compatible: %s\n", deviceinfo_get_rauc_compatible_str());
 	printf("Creation year: %s\n", deviceinfo_get_creation_year());
 }
 
@@ -85,6 +89,10 @@ int main(int argc, char **argv)
             printf("%s\n", deviceinfo_get_hardware_revision_str());
         } else if (strcmp(argv[i], "--serial") == 0) {
             printf("%s\n", deviceinfo_get_serial_str());
+        } else if (strcmp(argv[i], "--hwtype") == 0) {
+            printf("%s\n", deviceinfo_get_hwtype_str());
+        } else if (strcmp(argv[i], "--rauc-compatible") == 0) {
+            printf("%s\n", deviceinfo_get_rauc_compatible_str());
         } else if (strcmp(argv[i], "--creation-year") == 0) {
             printf("%s\n", deviceinfo_get_creation_year());
         } else {
